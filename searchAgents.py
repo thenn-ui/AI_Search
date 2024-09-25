@@ -482,7 +482,7 @@ def cornersHeuristic(state, problem):
 
     # return mindist
 
-    ### TYPE 3 Rewrite: YET TO REWRITE
+    ### TYPE 3 Rewrite:
     ### observation: serach nodes expanded = 693
     ### admissible: Yes
     ### consistent: Yes
@@ -598,7 +598,8 @@ def foodHeuristic(state, problem):
     #return 0
     foodlist = foodGrid.asList()[:]
 
-    ## CORNERS PROBLEM HEURISTIC DID NOT WORK!. It was not consistent. Random points on map with uncertain number reduces the consistency of the old heuristic.
+    ## CORNERS PROBLEM HEURISTIC DID NOT WORK!. It was not consistent. 
+    #  Random points on map with uncertain number reduces the consistency of the old heuristic.
 
     ## goal state reached. Hence heuristic returns 0
     if not foodlist:
