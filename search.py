@@ -146,9 +146,9 @@ def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
     "*** YOUR CODE HERE ***"
     #util.raiseNotDefined()
-    print "Start:", problem.getStartState()
-    print "Is the start a goal?", problem.isGoalState(problem.getStartState())
-    print "Start's successors:", problem.getSuccessors(problem.getStartState())
+    # print "Start:", problem.getStartState()
+    # print "Is the start a goal?", problem.isGoalState(problem.getStartState())
+    # print "Start's successors:", problem.getSuccessors(problem.getStartState())
     visitedlist = []
     bfsqueue = util.Queue()
     stack = util.Stack()
@@ -169,7 +169,7 @@ def breadthFirstSearch(problem):
         for successor in successorlist:
             #print successor
             bfsqueue.push((successor, currentstate))
-            print "current state = ", currentstate, "successor list = ", successorlist
+            #print "current state = ", currentstate, "successor list = ", successorlist
         
         currentframe = bfsqueue.pop()
         currentstate = currentframe[0][0]
@@ -191,7 +191,7 @@ def breadthFirstSearch(problem):
     action = frame[0][1]
     action_sequence.append(action)
     parentstate = frame[1]
-    print "########################"
+    #print "########################"
     while not stack.isEmpty():
         frame = stack.pop()
         state = frame[0][0]
@@ -201,8 +201,8 @@ def breadthFirstSearch(problem):
         #print "parent state = ", parentstate
         if parentstate == state and action != '0':
             action_sequence.append(action)
-            print "frame = ", frame, 
-            print "parentstate = ", parentstate
+            #print "frame = ", frame, 
+            #print "parentstate = ", parentstate
             parentstate = frame[1]
         #else:
          #   print "something wrong", parentstate, state
@@ -223,7 +223,7 @@ def uniformCostSearch(problem):
     mincostgoalstateframe = None
     pqueue.push(currentframe, 0)
 
-    while not pqueue.isEmpty():
+    while not pqueue.isEmpty() and not problem.isGoalState(currentstate):
 
         currentframe = pqueue.pop()
         currentstate = currentframe[0][0]
@@ -233,11 +233,18 @@ def uniformCostSearch(problem):
             #print currentstate, "Already present in visited list"
             continue
 
-        if problem.isGoalState(currentstate):
-            if mincostgoalstateframe == None:
-                mincostgoalstateframe = currentframe
-            elif mincostgoalstateframe[0][2] > currentstate[2]:
-                mincostgoalstateframe = currentframe
+        #print "currentstate ", currentstate
+        #print "current frame = ", currentframe
+        #print "mincostgoalstateframe", mincostgoalstateframe
+
+        # if problem.isGoalState(currentstate):
+        #     if mincostgoalstateframe == None:
+        #         mincostgoalstateframe = currentframe
+        #     elif mincostgoalstateframe[2] > currentframe[2]:
+        #         print "changed from", mincostgoalstateframe, "to : ", currentframe
+        #         mincostgoalstateframe = currentframe
+                #print "why? ", currentstate[2]
+                # do you want to expand the goal state's successors?
 
         visitedlist.append(currentstate)
         #print("visitedlist = ", visitedlist)
@@ -256,7 +263,8 @@ def uniformCostSearch(problem):
             #print "From state: ", currentstate, "to: ", successor, "total cost", totalcost
 
     #print mincostgoalstateframe
-    return mincostgoalstateframe[3]
+    #return mincostgoalstateframe[3]
+    return currentframe[3]
 
 def nullHeuristic(state, problem=None):
     """
@@ -279,8 +287,9 @@ def aStarSearch(problem, heuristic=nullHeuristic):
     currentframe = ((startstate, "0", 0), None, 0, [])
     mincostgoalstateframe = None
     pqueue.push(currentframe, fcost)
+    currentstate = startstate
 
-    while not pqueue.isEmpty():
+    while not pqueue.isEmpty() and not problem.isGoalState(currentstate):
 
         currentframe = pqueue.pop()
         currentstate = currentframe[0][0]
@@ -288,17 +297,19 @@ def aStarSearch(problem, heuristic=nullHeuristic):
         if currentstate in visitedlist:
             continue
         
-        print "current frame = ", currentframe
-        print "current state = ", currentstate
-        print "mincostgoal frame = ", mincostgoalstateframe
-        if mincostgoalstateframe != None: 
-            print "mincostgoalframe[2]" , mincostgoalstateframe[2]
-        print "currentframe[2]", currentframe[2]
-        if problem.isGoalState(currentstate):
-            if mincostgoalstateframe == None:
-                mincostgoalstateframe = currentframe
-            elif mincostgoalstateframe[2] > currentframe[2]: # based on only g since h = 0 at goal state
-                mincostgoalstateframe = currentframe
+
+        fcost_current = currentframe[2] + heuristic(currentstate, problem)
+        # print "current frame = ", currentframe
+        # print "current state = ", currentstate
+        # print "mincostgoal frame = ", mincostgoalstateframe
+        # if mincostgoalstateframe != None: 
+        #     print "mincostgoalframe[2]" , mincostgoalstateframe[2]
+        # print "currentframe[2]", currentframe[2]
+        # if problem.isGoalState(currentstate):
+        #     if mincostgoalstateframe == None:
+        #         mincostgoalstateframe = currentframe
+        #     elif mincostgoalstateframe[2] > currentframe[2]: # based on only g since h = 0 at goal state
+        #         mincostgoalstateframe = currentframe
                 # do you want to expand the goal state's successors?
 
         #visitedlist.add(currentstate) WORKS FOR Q 4
@@ -307,7 +318,7 @@ def aStarSearch(problem, heuristic=nullHeuristic):
         possiblesuccessors = problem.getSuccessors(currentstate)
         #print "possible successors for state: ", currentstate, "= ", possiblesuccessors
         successorlist = [successor for successor in possiblesuccessors if successor[0] not in visitedlist]
-        print "from:", currentstate, "successor list = ", successorlist
+        #print "from:", currentstate, "successor list = ", successorlist
         
         for successor in successorlist:   
             reqdactions = []
@@ -317,11 +328,14 @@ def aStarSearch(problem, heuristic=nullHeuristic):
             gcost = currentframe[2] + successor[2] # true cost to reach the successor
             hcost = heuristic(successor[0], problem) #from the successor to the goal, what is the heuristic
             fcost = gcost + hcost # estimated cost to reach the goal (eval function)
+            if (fcost - fcost_current) < 0:
+                print "##### ALERT: YOUR HEURISTIC IS INCONSISTENT! Current state =", currentstate, "gcost_current = ", currentframe[2], "successor frame =", (successor, gcost), "fcost = ", fcost, "hcost = ", hcost, "fcost_current = ", fcost_current, "hcost_current =", heuristic(currentstate, problem)
             pqueue.push((successor, currentstate, gcost, reqdactions), fcost)
-            print "From state: ", currentstate, "to: ", successor, "total true cost = ", gcost, "heuristic cost = ", hcost, "fcost = ", fcost
+            #print "From state: ", currentstate, "to: ", successor, "total true cost = ", gcost, "heuristic cost = ", hcost, "fcost = ", fcost
 
     #print mincostgoalstateframe
-    return mincostgoalstateframe[3]
+    #return mincostgoalstateframe[3]
+    return currentframe[3]
 
 
 # Abbreviations

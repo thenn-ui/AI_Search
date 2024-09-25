@@ -341,7 +341,7 @@ class CornersProblem(search.SearchProblem):
                 if nextStatePos in self.corners:
                     index = self.corners.index(nextStatePos)
                     nextState[1][index] = 0
-                    print "Found a corner!!: ", nextStatePos
+                    #print "Found a corner!!: ", nextStatePos
                 successors.append( ( nextState, action, cost) )
 
         self._expanded += 1 # DO NOT CHANGE
@@ -378,7 +378,130 @@ def cornersHeuristic(state, problem):
     walls = problem.walls # These are the walls of the maze, as a Grid (game.py)
 
     "*** YOUR CODE HERE ***"
-    return 0 # Default to trivial solution
+    #return 0 # Default to trivial solution
+    stateframe = state
+    h = 0
+
+    #print walls
+
+    ##### TYPE 1 heuristic: simple just take the manhattan distance to all the four corners
+    ##### Observations: 1. gives constant heuristic value. Does no better than 0. same result hence
+    #####               2. Not modified the corners already eaten
+    ####                3. search nodes expanded = 1967. score = 434. path cost = 106
+    ##### Admissible: Yes. we only take the manhattan distance. this underestimates the true path
+    ##### consistent: YES. BUT USELESS. similar to h(n) = 0
+    # for corner in corners:
+    #     h += util.manhattanDistance(stateframe[0], corner)
+    #     print "stateframe = ",stateframe, "corner = ", corner, "h = ", h
+
+
+    ###### TYPE 1b: modify the corners eaten already
+    ###### observations: 1. search nodes expanded = 503. score = 434. path cost = 106
+    ######      WORKS TOO WELL? DOUBTFUL!!!
+    ###### admissible: yes
+    ###### consistent: FAILED
+    # for corner in corners:
+    #     if stateframe[1][corners.index(corner)] == 1: #yet to be eaten
+    #         h += util.manhattanDistance(stateframe[0], corner)
+    #         print "stateframe = ",stateframe, "corner = ", corner, "h = ", h
+
+    ###### TYPE 2a: use euclidean distance
+    ###### observations: search nodes expanded = 704 (Higher than manhattan distance. This means that you are expanding more nodes. 
+    #######                                             Meaning that manhattan distance was closer to your true cost function. Obviously!!)
+    ######    admissible: yes
+    ######    consistent: FAILED
+
+    # for corner in corners:
+    #     if stateframe[1][corners.index(corner)] == 1: #yet to be eaten
+    #         xy1 = stateframe[0]
+    #         xy2 = corner
+    #         h += ( (xy1[0] - xy2[0]) ** 2 + (xy1[1] - xy2[1]) ** 2 ) ** 0.5
+    #         print "stateframe = ",stateframe, "corner = ", corner, "h = ", h
+
+    ###### TYPE 3: use manhattan distance on corners selectively
+    ###### Observation: search nodes expanded = 2839
+    ###### admissible: yes
+    ###### consistent: FAILED
+
+    ## find the closest corner with food first.
+    # prev_pos = stateframe[0]
+    # visitorderlist = []
+    # for c in corners:
+    #     mindist = 99999999999
+    #     closestcorner = None
+    #     for corner in corners:
+    #         if stateframe[1][corners.index(corner)] == 1 and corner not in visitorderlist: #yet to be eaten state and corner not in visit order list (plan)
+    #             dist = util.manhattanDistance(prev_pos, corner)
+    #             if dist < mindist:
+    #                 mindist = dist
+    #                 closestcorner = corner
+
+    #             h +=  mindist
+    #     prev_pos = closestcorner
+    #     visitorderlist.append(prev_pos)
+
+    ###### TYPE 4: holistic view on the state i.e: look if you are eating the foods properly
+    ###### INCONSISTENT!!!
+    ###### Admissible? not sure
+    # for corner in corners:
+    #     if stateframe[1][corners.index(corner)] == 1: #yet to be eaten
+    #         h += 100
+            #print "stateframe = ",stateframe, "corner = ", corner, "h = ", h
+
+    ###### TYPE 4b: holistic view on the state i.e: look if you are eating the foods properly. Adjust h values
+    ###### CONSISTENT
+    ###### Admissible? Yes
+    ##### observations: 1909 search nodes expanded
+    ##### NOT MUCH OF DIFFERENCE 1/3 points only
+    # for corner in corners:
+    #     if stateframe[1][corners.index(corner)] == 1: #yet to be eaten
+    #         h += 1
+            #print "stateframe = ",stateframe, "corner = ", corner, "h = ", h
+
+    ###### TYPE 5: use manhattan distance on corners selectively. get the closest path
+    ###### Observation: Search nodes expanded: 2839
+    ###### admissible: yes
+    ###### consistent: YES
+
+    ## find the closest corner with food first.
+    #prev_pos = stateframe[0]
+    # visitorderlist = []
+    # #for c in corners:
+    # mindist = 99999999999
+    #     #closestcorner = None
+    # for corner in corners:
+    #     if stateframe[1][corners.index(corner)] == 1 and corner not in visitorderlist: #yet to be eaten state and corner not in visit order list (plan)
+    #         dist = util.manhattanDistance(stateframe[0], corner)
+    #         if dist < mindist:
+    #             mindist = dist
+    #             closestcorner = corner
+
+    #             #h +=  mindist
+    #     #prev_pos = closestcorner
+    #     #visitorderlist.append(prev_pos)
+
+    # return mindist
+
+    ### TYPE 3 Rewrite: YET TO REWRITE
+    ### observation: serach nodes expanded = 693
+    ### admissible: Yes
+    ### consistent: Yes
+    
+    cornerslist = state[1]
+
+    visitorderlist = []
+    for i in range(len(corners)):
+        if cornerslist[i] == 1:
+            visitorderlist.append(corners[i])
+
+    prev_pos = state[0]
+    while(len(visitorderlist)!=0):
+        distance, corner = min( [(util.manhattanDistance(prev_pos ,corner),corner) for corner in visitorderlist] )
+        h = h + distance
+        prev_pos = corner
+        visitorderlist.remove(corner) 
+
+    return h
 
 class AStarCornersAgent(SearchAgent):
     "A SearchAgent for FoodSearchProblem using A* and your foodHeuristic"
@@ -472,7 +595,51 @@ def foodHeuristic(state, problem):
     """
     position, foodGrid = state
     "*** YOUR CODE HERE ***"
-    return 0
+    #return 0
+    foodlist = foodGrid.asList()[:]
+
+    ## CORNERS PROBLEM HEURISTIC DID NOT WORK!. It was not consistent. Random points on map with uncertain number reduces the consistency of the old heuristic.
+
+    ## goal state reached. Hence heuristic returns 0
+    if not foodlist:
+        return 0
+
+    min_distance, startpos = min( [(util.manhattanDistance(position ,pos), pos) for pos in foodlist] )
+
+    ### go to the nearest food point and calculate the MST total distance from it. Using Prim's algorithm
+    mst_cost = 0
+
+    mstSet = set()
+    mstSet.add(startpos)
+
+    pq = util.PriorityQueue()
+   
+    for point in foodlist:
+        pq.push((startpos, point), util.manhattanDistance(startpos, point))
+            
+
+    while not pq.isEmpty():
+        p1, p2 = pq.pop()
+        if p1 in mstSet and p2 not in mstSet:
+            mst_cost += util.manhattanDistance(p1, p2)
+            mstSet.add(p2)
+            for point in foodlist:
+                if point not in mstSet:
+                    pq.push((p2, point), util.manhattanDistance(p2, point))
+        elif p1 not in mstSet and p2 in mstSet:
+            mst_cost += util.manhattanDistance(p1, p2)
+            mstSet.add(p1)
+            for point in foodlist:
+                if point not in mstSet:
+                    pq.push((p1, point), util.manhattanDistance(p1, point))
+        
+        # covered all food points. No need to check priority queue further
+        if len(mstSet) == len(foodlist):
+            break;
+
+
+    return min_distance + mst_cost
+
 
 class ClosestDotSearchAgent(SearchAgent):
     "Search for all food using a sequence of searches"
@@ -503,7 +670,14 @@ class ClosestDotSearchAgent(SearchAgent):
         problem = AnyFoodSearchProblem(gameState)
 
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        #util.raiseNotDefined()
+        #return search.aStarSearch(problem, search.nullHeuristic) ### path cost = 350
+        #return search.depthFirstSearch(problem)  ## path cost = 5324
+        #return search.breadthFirstSearch(problem) ### path cost = 350
+        return search.uniformCostSearch(problem) ## path cost = 350
+
+
+
 
 class AnyFoodSearchProblem(PositionSearchProblem):
     """
@@ -539,7 +713,13 @@ class AnyFoodSearchProblem(PositionSearchProblem):
         x,y = state
 
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        #util.raiseNotDefined()
+        foodlist = self.food.asList()
+        for point in foodlist:
+            if util.manhattanDistance(state, point) == 0:
+                return True
+
+        return False 
 
 def mazeDistance(point1, point2, gameState):
     """
