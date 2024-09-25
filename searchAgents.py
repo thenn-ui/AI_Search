@@ -636,7 +636,7 @@ def foodHeuristic(state, problem):
         
         # covered all food points. No need to check priority queue further
         if len(mstSet) == len(foodlist):
-            break;
+            break
 
 
     return min_distance + mst_cost

@@ -198,6 +198,8 @@ def uniformCostSearch(problem):
         if currentstate in visitedlist: #no answer derived
             continue
 
+        if problem.isGoalState(currentstate): # no need to expand goal state
+            break
 
         visitedlist.append(currentstate)
         possiblesuccessors = problem.getSuccessors(currentstate)
@@ -245,28 +247,13 @@ def aStarSearch(problem, heuristic=nullHeuristic):
         if currentstate in visitedlist:
             continue
         
+        if problem.isGoalState(currentstate):
+            break
 
         fcost_current = currentframe[2] + heuristic(currentstate, problem)
-        # print "current frame = ", currentframe
-        # print "current state = ", currentstate
-        # print "mincostgoal frame = ", mincostgoalstateframe
-        # if mincostgoalstateframe != None: 
-        #     print "mincostgoalframe[2]" , mincostgoalstateframe[2]
-        # print "currentframe[2]", currentframe[2]
-        # if problem.isGoalState(currentstate):
-        #     if mincostgoalstateframe == None:
-        #         mincostgoalstateframe = currentframe
-        #     elif mincostgoalstateframe[2] > currentframe[2]: # based on only g since h = 0 at goal state
-        #         mincostgoalstateframe = currentframe
-                # do you want to expand the goal state's successors?
-
-        #visitedlist.add(currentstate) WORKS FOR Q 4
         visitedlist.append(currentstate)
-        #print "visited list = ", visitedlist
         possiblesuccessors = problem.getSuccessors(currentstate)
-        #print "possible successors for state: ", currentstate, "= ", possiblesuccessors
         successorlist = [successor for successor in possiblesuccessors if successor[0] not in visitedlist]
-        #print "from:", currentstate, "successor list = ", successorlist
         
         for successor in successorlist:   
             reqdactions = []
@@ -279,10 +266,7 @@ def aStarSearch(problem, heuristic=nullHeuristic):
             #if (fcost - fcost_current) < 0:
              #   print "##### ALERT: YOUR HEURISTIC IS INCONSISTENT! Current state =", currentstate, "gcost_current = ", currentframe[2], "successor frame =", (successor, gcost), "fcost = ", fcost, "hcost = ", hcost, "fcost_current = ", fcost_current, "hcost_current =", heuristic(currentstate, problem)
             pqueue.push((successor, currentstate, gcost, reqdactions), fcost)
-            #print "From state: ", currentstate, "to: ", successor, "total true cost = ", gcost, "heuristic cost = ", hcost, "fcost = ", fcost
-
-    #print mincostgoalstateframe
-    #return mincostgoalstateframe[3]
+            
     return currentframe[3]
 
 
